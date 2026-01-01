@@ -1,0 +1,5 @@
+{
+  "name": "Suffy Poultry",
+  "description": "An all-in-one poultry management assistant to track egg production, mortality, feed stock, and sales. It provides daily, weekly, and monthly summaries with PDF export capabilities, acting as a digital farm record book.",
+  "requestFramePermissions": []
+}
