@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
-import { DailyReport } from '../../types';
+import { DailyReport, UserProfile } from '../../types';
 import { ReportCard } from './ReportCard';
 
 interface HistoryViewProps {
   reports: DailyReport[];
+  activeProfile: UserProfile;
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ reports }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ reports, activeProfile }) => {
   const [openReportDate, setOpenReportDate] = useState<string | null>(null);
 
   const toggleReport = (date: string) => {
@@ -26,6 +27,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ reports }) => {
             report={report} 
             isOpen={openReportDate === report.date}
             onToggle={() => toggleReport(report.date)}
+            activeProfile={activeProfile}
           />
         ))
       )}

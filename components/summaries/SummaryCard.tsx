@@ -1,18 +1,17 @@
 
 import React from 'react';
-import { DailyReport } from '../../types';
-import { exportToPdf } from '../../services/pdfService';
+import { DailyReport, UserProfile } from '../../types';
+import { exportSummaryToPdf } from '../../services/pdfService';
 import { PdfIcon } from '../icons/PdfIcon';
 
 interface SummaryCardProps {
     reports: DailyReport[];
     period: string;
     title: string;
+    activeProfile: UserProfile;
 }
 
-const SummaryCard: React.FC<SummaryCardProps> = ({ reports, period, title }) => {
-    const summaryId = `summary-${title.replace(/\s+/g, '-')}`;
-
+const SummaryCard: React.FC<SummaryCardProps> = ({ reports, period, title, activeProfile }) => {
     if (reports.length === 0) {
         return <p className="text-center text-gray-500 mt-8">No data available for this period.</p>;
     }
@@ -48,7 +47,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ reports, period, title }) => 
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-            <div id={summaryId}>
+            <div>
                 <h3 className="text-xl font-bold text-black">{title}</h3>
                 <p className="text-sm text-gray-500 mb-4">{period}</p>
                 
@@ -63,7 +62,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ reports, period, title }) => 
             </div>
             <div className="mt-6 text-center">
                 <button
-                    onClick={() => exportToPdf(summaryId, `Suffy-Poultry-${title}.pdf`)}
+                    onClick={() => exportSummaryToPdf(reports, title, period, activeProfile)}
                     className="inline-flex items-center px-4 py-2 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
                 >
                     <PdfIcon className="w-5 h-5 mr-2" />

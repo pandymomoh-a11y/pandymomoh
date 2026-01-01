@@ -41,11 +41,11 @@ const App: React.FC = () => {
       case 'reports':
         return <DailyReports onSave={handleAddReport} />;
       case 'history':
-        return <HistoryView reports={reports} />;
+        return <HistoryView reports={reports} activeProfile={activeProfile} />;
       case 'weekly':
-        return <WeeklySummary reports={reports} />;
+        return <WeeklySummary reports={reports} activeProfile={activeProfile} />;
       case 'monthly':
-        return <MonthlySummary reports={reports} />;
+        return <MonthlySummary reports={reports} activeProfile={activeProfile} />;
       default:
         return <DailyReports onSave={handleAddReport} />;
     }

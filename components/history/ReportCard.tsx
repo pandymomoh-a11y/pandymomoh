@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { DailyReport } from '../../types';
-import { exportToPdf } from '../../services/pdfService';
+import { DailyReport, UserProfile } from '../../types';
+import { exportDailyReportToPdf } from '../../services/pdfService';
 import { PdfIcon } from '../icons/PdfIcon';
 import { EggIcon } from '../icons/EggIcon';
 import { SkullIcon } from '../icons/SkullIcon';
@@ -12,9 +12,10 @@ interface ReportCardProps {
     report: DailyReport;
     isOpen: boolean;
     onToggle: () => void;
+    activeProfile: UserProfile;
 }
 
-export const ReportCard: React.FC<ReportCardProps> = ({ report, isOpen, onToggle }) => {
+export const ReportCard: React.FC<ReportCardProps> = ({ report, isOpen, onToggle, activeProfile }) => {
     const reportId = `report-${report.date}`;
 
     const eggTotals = report.eggProduction.entries.reduce((acc, entry) => {
@@ -84,7 +85,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, isOpen, onToggle
                     </div>
                     <div className="mt-6 text-center">
                         <button
-                            onClick={() => exportToPdf(reportId, `Suffy-Poultry-Report-${report.date}.pdf`)}
+                            onClick={() => exportDailyReportToPdf(report, activeProfile)}
                             className="inline-flex items-center px-4 py-2 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
                         >
                             <PdfIcon className="w-5 h-5 mr-2" />
