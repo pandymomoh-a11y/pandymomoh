@@ -1,24 +1,25 @@
+
 {
   "short_name": "Suffy Poultry",
   "name": "Suffy Poultry Management",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f3f4f6",
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "poultry.svg",
+      "src": "/poultry.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     },
     {
-      "src": "icon-192.png",
-      "type": "image/png",
+      "src": "/poultry.svg",
+      "type": "image/svg+xml",
       "sizes": "192x192"
     },
     {
-      "src": "icon-512.png",
-      "type": "image/png",
+      "src": "/poultry.svg",
+      "type": "image/svg+xml",
       "sizes": "512x512"
     }
   ]

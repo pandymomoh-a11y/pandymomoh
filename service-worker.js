@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'suffy-poultry-cache-v2';
+const CACHE_NAME = 'suffy-poultry-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,16 +18,22 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
         // Return cached version or fetch from network
         return response || fetch(event.request).catch(() => {
-            // Fallback for offline if not in cache
-            return caches.match('/');
+          // If the fetch fails (offline) and it's a navigation request, 
+          // return the cached index.html to support SPA routing offline.
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html') || caches.match('/');
+          }
+          return null;
         });
-      }
-    )
+      })
   );
 });
 
