@@ -11,6 +11,7 @@ export interface EggProductionReport {
 
 export interface MortalityEntry {
   birdType: string;
+  population: number;
   numberDead: number;
 }
 
@@ -45,6 +46,7 @@ export interface DailyReport {
   mortality: MortalityReport;
   feedStock: FeedStockReport;
   eggSales: EggSalesReport;
+  notes?: string;
 }
 
 export interface UserProfile {

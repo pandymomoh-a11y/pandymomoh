@@ -3,41 +3,105 @@ import { DailyReport, UserProfile } from '../types';
 
 declare const jspdf: any;
 
+/**
+ * Standard colors for the farm record book
+ */
+const COLORS = {
+  PRIMARY: [79, 70, 229], // Indigo
+  SECONDARY: [51, 65, 85], // Slate
+  TEXT: [30, 41, 59],
+  RED: [185, 28, 28],
+  AMBER: [180, 83, 9],
+  SKY: [3, 105, 161],
+  LIGHT_GRAY: [248, 250, 252]
+};
+
+const drawHeader = (doc: any, title: string, subtitle: string, profile: UserProfile, reportDate?: string) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Indigo Top Bar
+  doc.setFillColor(...COLORS.PRIMARY);
+  doc.rect(0, 0, pageWidth, 15, 'F');
+  
+  // App Name & Title
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SUFFY POULTRY - DIGITAL FARM LEDGER', 14, 10);
+  
+  doc.setTextColor(...COLORS.PRIMARY);
+  doc.setFontSize(24);
+  doc.text(title.toUpperCase(), 14, 30);
+  
+  doc.setTextColor(...COLORS.SECONDARY);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text(subtitle, 14, 38);
+
+  // Farm Info Box (Right Aligned)
+  doc.setFontSize(9);
+  doc.setTextColor(...COLORS.TEXT);
+  const infoX = pageWidth - 14;
+  doc.text(`FARM OWNER: ${profile.name.toUpperCase()}`, infoX, 30, { align: 'right' });
+  if (reportDate) {
+    doc.text(`RECORD DATE: ${new Date(reportDate + 'T00:00:00').toLocaleDateString()}`, infoX, 35, { align: 'right' });
+  }
+  doc.text(`PRINTED ON: ${new Date().toLocaleString()}`, infoX, 40, { align: 'right' });
+
+  // Decorative Line
+  doc.setDrawColor(...COLORS.PRIMARY);
+  doc.setLineWidth(0.5);
+  doc.line(14, 45, pageWidth - 14, 45);
+};
+
+const drawFooter = (doc: any) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageCount = doc.internal.getNumberOfPages();
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    
+    // Signature Area on the last page or every page for formality
+    const footerStartY = pageHeight - 35;
+    doc.setDrawColor(200);
+    doc.setLineWidth(0.2);
+    doc.line(14, footerStartY, 80, footerStartY);
+    doc.line(pageWidth - 80, footerStartY, pageWidth - 14, footerStartY);
+    
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text('FARM MANAGER SIGNATURE', 14, footerStartY + 5);
+    doc.text('VERIFIED BY / SUPERVISOR', pageWidth - 14, footerStartY + 5, { align: 'right' });
+
+    // Page numbers
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+    doc.text('© Suffy Poultry - Professional Farm Management Systems', 14, pageHeight - 10);
+  }
+};
+
 export const exportDailyReportToPdf = (report: DailyReport, profile: UserProfile) => {
   const { jsPDF } = jspdf;
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  // Header
-  doc.setFontSize(22);
-  doc.setTextColor(79, 70, 229); // Indigo-600
-  doc.text('Suffy Poultry', 14, 20);
   
+  drawHeader(doc, 'Daily Production Record', 'Detailed breakdown of poultry metrics', profile, report.date);
+
+  let currentY = 55;
+
+  // 1. Egg Production
   doc.setFontSize(14);
-  doc.setTextColor(100);
-  doc.text('Daily Farm Record', 14, 30);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  doc.text(`Farm/Owner: ${profile.name}`, 14, 40);
-  doc.text(`Report Date: ${new Date(report.date + 'T00:00:00').toLocaleDateString()}`, 14, 45);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 50);
-
-  let currentY = 60;
-
-  // Egg Production Table
-  doc.setFontSize(12);
-  doc.setTextColor(79, 70, 229);
-  doc.text('1. Egg Production', 14, currentY);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.PRIMARY);
+  doc.text('SECTION 1: EGG PRODUCTION', 14, currentY);
   
   const eggData = report.eggProduction.entries.map(e => {
     const usable = e.totalEggs - e.crackedEggs;
     return [
       e.birdType,
-      e.totalEggs,
-      e.crackedEggs,
-      usable > 0 ? Math.floor(usable / 30) : 0,
-      usable > 0 ? usable % 30 : 0
+      e.totalEggs.toLocaleString(),
+      e.crackedEggs.toLocaleString(),
+      usable > 0 ? Math.floor(usable / 30).toLocaleString() : '0',
+      usable > 0 ? (usable % 30).toLocaleString() : '0'
     ];
   });
   
@@ -56,104 +120,113 @@ export const exportDailyReportToPdf = (report: DailyReport, profile: UserProfile
 
   (doc as any).autoTable({
     startY: currentY + 5,
-    head: [['Bird Type', 'Total Eggs', 'Cracked', 'Crates', 'Pieces']],
-    body: [...eggData, ['Total', eggTotals.total, eggTotals.cracked, eggTotals.crates, eggTotals.pieces]],
-    headStyles: { fillColor: [79, 70, 229] },
-    footStyles: { fillColor: [238, 242, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+    head: [['BIRD TYPE / PEN', 'TOTAL EGGS', 'CRACKED', 'CRATES (30s)', 'LOOSE PIECES']],
+    body: [...eggData, [{content: 'CONSOLIDATED TOTALS', styles: {fontStyle: 'bold'}}, eggTotals.total.toLocaleString(), eggTotals.cracked.toLocaleString(), eggTotals.crates.toLocaleString(), eggTotals.pieces.toLocaleString()]],
+    headStyles: { fillColor: COLORS.PRIMARY, textColor: 255, fontSize: 10, fontStyle: 'bold', halign: 'center' },
+    bodyStyles: { fontSize: 10, halign: 'center' },
+    columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
     theme: 'grid'
   });
 
   currentY = (doc as any).lastAutoTable.finalY + 15;
 
-  // Mortality Table
-  doc.text('2. Mortality Report', 14, currentY);
-  const mortalityData = report.mortality.entries.map(e => [e.birdType, e.numberDead]);
-  const totalMortality = report.mortality.entries.reduce((acc, e) => acc + e.numberDead, 0);
+  // 2. Mortality
+  doc.setTextColor(...COLORS.RED);
+  doc.text('SECTION 2: BIRD MORTALITY & POPULATION', 14, currentY);
+  
+  const mortalityData = report.mortality.entries.map(e => [
+    e.birdType, 
+    e.population.toLocaleString(), 
+    e.numberDead.toLocaleString(), 
+    (e.population - e.numberDead).toLocaleString()
+  ]);
+  
+  const mortTotals = report.mortality.entries.reduce((acc, e) => {
+    acc.pop += e.population;
+    acc.dead += e.numberDead;
+    acc.bal += (e.population - e.numberDead);
+    return acc;
+  }, { pop: 0, dead: 0, bal: 0 });
 
   (doc as any).autoTable({
     startY: currentY + 5,
-    head: [['Bird Type', 'Deaths']],
-    body: [...mortalityData, ['Total Deaths', totalMortality]],
-    headStyles: { fillColor: [220, 38, 38] },
+    head: [['BIRD TYPE', 'STARTING POPULATION', 'DAILY DEATHS', 'CLOSING BALANCE']],
+    body: [...mortalityData, [{content: 'TOTALS', styles: {fontStyle: 'bold'}}, mortTotals.pop.toLocaleString(), mortTotals.dead.toLocaleString(), mortTotals.bal.toLocaleString()]],
+    headStyles: { fillColor: COLORS.RED, textColor: 255, fontSize: 10, fontStyle: 'bold', halign: 'center' },
+    bodyStyles: { fontSize: 10, halign: 'center' },
+    columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
     theme: 'grid'
   });
 
   currentY = (doc as any).lastAutoTable.finalY + 15;
 
-  // Feed Stock Table
-  doc.setTextColor(180, 83, 9); // Amber-700
-  doc.text('3. Feed Stock Status', 14, currentY);
+  // 3. Feed & Sales (Combined in a row or list)
+  if (currentY > 220) { doc.addPage(); currentY = 55; }
+  
+  doc.setTextColor(...COLORS.AMBER);
+  doc.text('SECTION 3: FEED STOCK LOGISTICS', 14, currentY);
   const feedData = report.feedStock.entries.map(e => [
     e.feedType, 
-    e.opening, 
-    e.used, 
-    e.bought, 
-    e.opening + e.bought - e.used
+    e.opening.toLocaleString(), 
+    e.used.toLocaleString(), 
+    e.bought.toLocaleString(), 
+    (e.opening + e.bought - e.used).toLocaleString()
   ]);
 
   (doc as any).autoTable({
     startY: currentY + 5,
-    head: [['Feed Type', 'Opening', 'Used', 'Bought', 'Balance']],
+    head: [['FEED TYPE', 'OPENING STOCK', 'UNITS USED', 'NEW ARRIVALS', 'CLOSING STOCK']],
     body: feedData,
-    headStyles: { fillColor: [180, 83, 9] },
+    headStyles: { fillColor: COLORS.AMBER, fontSize: 10, halign: 'center' },
+    bodyStyles: { fontSize: 10, halign: 'center' },
+    columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
     theme: 'grid'
   });
 
   currentY = (doc as any).lastAutoTable.finalY + 15;
+  if (currentY > 220) { doc.addPage(); currentY = 55; }
 
-  // Check if we need a new page for Sales
-  if (currentY > 240) {
-    doc.addPage();
-    currentY = 20;
-  }
-
-  // Sales Table
-  doc.setTextColor(3, 105, 161); // Sky-700
-  doc.text('4. Egg Sales', 14, currentY);
+  doc.setTextColor(...COLORS.SKY);
+  doc.text('SECTION 4: EGG SALES & INVENTORY', 14, currentY);
   const salesData = report.eggSales.entries.map(e => [
     e.eggType, 
-    e.opening, 
-    e.sold, 
-    e.opening - e.sold
+    e.opening.toLocaleString(), 
+    e.sold.toLocaleString(), 
+    (e.opening - e.sold).toLocaleString()
   ]);
 
   (doc as any).autoTable({
     startY: currentY + 5,
-    head: [['Egg Type', 'Opening', 'Sold', 'Balance']],
+    head: [['EGG CATEGORY', 'OPENING INVENTORY', 'UNITS SOLD', 'CLOSING BALANCE']],
     body: salesData,
-    headStyles: { fillColor: [3, 105, 161] },
+    headStyles: { fillColor: COLORS.SKY, fontSize: 10, halign: 'center' },
+    bodyStyles: { fontSize: 10, halign: 'center' },
+    columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
     theme: 'grid'
   });
 
-  // Footer
-  const pageCount = (doc as any).internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Page ${i} of ${pageCount} - Suffy Poultry Digital Farm Assistant`, pageWidth / 2, 285, { align: 'center' });
+  // Notes Section
+  currentY = (doc as any).lastAutoTable.finalY + 15;
+  if (report.notes) {
+    if (currentY > 240) { doc.addPage(); currentY = 55; }
+    doc.setTextColor(...COLORS.SECONDARY);
+    doc.text('SECTION 5: GENERAL OBSERVATIONS & NOTES', 14, currentY);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(60);
+    const splitNotes = doc.splitTextToSize(report.notes, 180);
+    doc.text(splitNotes, 14, currentY + 7);
   }
 
-  doc.save(`Suffy-Poultry-Report-${report.date}.pdf`);
+  drawFooter(doc);
+  doc.save(`FARM-REPORT-${report.date}-${profile.name.replace(/\s+/g, '_')}.pdf`);
 };
 
 export const exportSummaryToPdf = (reports: DailyReport[], title: string, period: string, profile: UserProfile) => {
   const { jsPDF } = jspdf;
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  doc.setFontSize(22);
-  doc.setTextColor(79, 70, 229);
-  doc.text('Suffy Poultry', 14, 20);
   
-  doc.setFontSize(14);
-  doc.setTextColor(100);
-  doc.text(title, 14, 30);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(0);
-  doc.text(`Farm/Owner: ${profile.name}`, 14, 40);
-  doc.text(`Period: ${period}`, 14, 45);
+  drawHeader(doc, title, `Aggregate performance summary for the period`, profile);
 
   const totals = reports.reduce((acc, report) => {
     report.eggProduction.entries.forEach(e => {
@@ -177,22 +250,30 @@ export const exportSummaryToPdf = (reports: DailyReport[], title: string, period
 
   (doc as any).autoTable({
     startY: 60,
-    head: [['Metric', 'Value']],
+    head: [['PERFORMANCE METRIC', 'TOTAL QUANTITY / UNITS']],
     body: [
-      ['Total Eggs Produced', totals.totalEggs.toLocaleString()],
-      ['Total Crates (usable)', totalCrates.toLocaleString()],
-      ['Total Cracked Eggs', totals.crackedEggs.toLocaleString()],
-      ['Total Bird Mortality', totals.mortality.toLocaleString()],
-      ['Total Feed Used (units)', totals.feedUsed.toLocaleString()],
-      ['Total Eggs Sold', totals.eggsSold.toLocaleString()]
+      ['Total Eggs Harvested', totals.totalEggs.toLocaleString()],
+      ['Market-Ready Crates (Usable)', totalCrates.toLocaleString()],
+      ['Damaged/Cracked Eggs', totals.crackedEggs.toLocaleString()],
+      ['Bird Mortality (Cumulative)', totals.mortality.toLocaleString()],
+      ['Total Feed Consumption', totals.feedUsed.toLocaleString()],
+      ['Revenue-Generating Units Sold', totals.eggsSold.toLocaleString()]
     ],
-    headStyles: { fillColor: [79, 70, 229] },
-    theme: 'striped'
+    headStyles: { fillColor: COLORS.PRIMARY, fontSize: 12, halign: 'left' },
+    bodyStyles: { fontSize: 12, padding: 8 },
+    theme: 'striped',
+    styles: { cellPadding: 5 }
   });
 
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  doc.text(`Suffy Poultry Summary - Generated ${new Date().toLocaleString()}`, pageWidth / 2, 285, { align: 'center' });
+  // Summary Statement
+  const summaryY = (doc as any).lastAutoTable.finalY + 20;
+  doc.setFontSize(11);
+  doc.setTextColor(60);
+  doc.setFont('helvetica', 'normal');
+  const summaryText = `This ${title.toLowerCase()} for the period of ${period} comprises data from ${reports.length} individual daily logs. All figures represent cumulative totals as recorded by the Suffy Poultry system for the farm profile: ${profile.name}.`;
+  const splitSummary = doc.splitTextToSize(summaryText, 180);
+  doc.text(splitSummary, 14, summaryY);
 
-  doc.save(`Suffy-Poultry-${title.replace(/\s+/g, '-')}.pdf`);
+  drawFooter(doc);
+  doc.save(`SUMMARY-${title.replace(/\s+/g, '_')}-${new Date().getTime()}.pdf`);
 };
