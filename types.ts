@@ -33,6 +33,7 @@ export interface FeedStockReport {
 export interface EggSaleEntry {
   eggType: string;
   opening: number;
+  production: number;
   sold: number;
 }
 

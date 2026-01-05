@@ -9,7 +9,7 @@ interface EggSalesReportFormProps {
 }
 
 const EggSalesReportForm: React.FC<EggSalesReportFormProps> = ({ onUpdate }) => {
-  const initialEntries = EGG_SALE_TYPES.map(et => ({ eggType: et, opening: 0, sold: 0 }));
+  const initialEntries = EGG_SALE_TYPES.map(et => ({ eggType: et, opening: 0, production: 0, sold: 0 }));
   const [entries, setEntries] = useState<EggSaleEntry[]>(initialEntries);
 
   useEffect(() => {
@@ -31,21 +31,26 @@ const EggSalesReportForm: React.FC<EggSalesReportFormProps> = ({ onUpdate }) => 
         <table className="w-full text-sm text-left">
           <thead className="bg-sky-200 text-black uppercase text-xs">
             <tr>
-              <th className="py-2 px-2">Type of Egg</th>
+              <th className="py-2 px-2">Type</th>
               <th className="py-2 px-2">Opening</th>
+              <th className="py-2 px-2">Production</th>
+              <th className="py-2 px-2">Total</th>
               <th className="py-2 px-2">Sold</th>
               <th className="py-2 px-2">Balance</th>
             </tr>
           </thead>
           <tbody>
             {entries.map((entry, index) => {
-              const balance = entry.opening - entry.sold;
+              const total = entry.opening + entry.production;
+              const balance = total - entry.sold;
               return (
                 <tr key={index} className="border-b">
                   <td className="py-2 px-2 font-medium text-gray-900">{entry.eggType}</td>
-                  <td className="py-2 px-2"><input type="number" value={entry.opening || ''} onChange={e => handleEntryChange(index, 'opening', e.target.value)} className="w-24 p-1 border rounded bg-white text-black text-base" /></td>
-                  <td className="py-2 px-2"><input type="number" value={entry.sold || ''} onChange={e => handleEntryChange(index, 'sold', e.target.value)} className="w-24 p-1 border rounded bg-white text-black text-base" /></td>
-                  <td className="py-2 px-2 text-gray-900">{balance}</td>
+                  <td className="py-2 px-2"><input type="number" value={entry.opening || ''} onChange={e => handleEntryChange(index, 'opening', e.target.value)} className="w-full p-1 border rounded bg-white text-black text-base" placeholder="0" /></td>
+                  <td className="py-2 px-2"><input type="number" value={entry.production || ''} onChange={e => handleEntryChange(index, 'production', e.target.value)} className="w-full p-1 border rounded bg-white text-black text-base" placeholder="0" /></td>
+                  <td className="py-2 px-2 font-bold text-gray-900">{total}</td>
+                  <td className="py-2 px-2"><input type="number" value={entry.sold || ''} onChange={e => handleEntryChange(index, 'sold', e.target.value)} className="w-full p-1 border rounded bg-white text-black text-base" placeholder="0" /></td>
+                  <td className="py-2 px-2 font-bold text-gray-900">{balance}</td>
                 </tr>
               );
             })}

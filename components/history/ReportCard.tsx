@@ -82,26 +82,46 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, isOpen, onToggle
                             </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Feed Stock */}
-                            <div>
-                                <h3 className="text-sm font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center"><FeedIcon className="w-5 h-5 mr-2" /> 03. Feed Stock</h3>
-                                <div className="rounded-lg border border-amber-100 overflow-hidden">
-                                  <table className="w-full text-xs">
-                                      <thead className="bg-amber-600 text-white"><tr><th className="p-2 text-left">Feed</th><th className="p-2 text-right">Used</th><th className="p-2 text-right">Balance</th></tr></thead>
-                                      <tbody>{report.feedStock.entries.map((e, i) => <tr key={i} className="border-b border-amber-50 text-gray-900"><td className="p-2 font-semibold">{e.feedType}</td><td className="p-2 text-right">{e.used}</td><td className="p-2 text-right font-bold">{e.opening + e.bought - e.used}</td></tr>)}</tbody>
-                                  </table>
-                                </div>
+                        {/* Feed Stock */}
+                        <div>
+                            <h3 className="text-sm font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center"><FeedIcon className="w-5 h-5 mr-2" /> 03. Feed Stock</h3>
+                            <div className="overflow-x-auto rounded-lg border border-amber-100">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-amber-600 text-white font-bold">
+                                    <tr>
+                                        <th className="p-3 text-left">Feed</th>
+                                        <th className="p-3 text-right">Opening</th>
+                                        <th className="p-3 text-right">Used</th>
+                                        <th className="p-3 text-right">Bought</th>
+                                        <th className="p-3 text-right">Balance</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>{report.feedStock.entries.map((e, i) => <tr key={i} className="border-b border-amber-50 text-gray-900"><td className="p-3 font-semibold">{e.feedType}</td><td className="p-3 text-right">{e.opening}</td><td className="p-3 text-right">{e.used}</td><td className="p-3 text-right">{e.bought}</td><td className="p-3 text-right font-bold">{e.opening + e.bought - e.used}</td></tr>)}</tbody>
+                                </table>
                             </div>
-                            {/* Egg Sales */}
-                            <div>
-                                <h3 className="text-sm font-black text-sky-700 uppercase tracking-widest mb-3 flex items-center"><SalesIcon className="w-5 h-5 mr-2" /> 04. Egg Sales</h3>
-                                <div className="rounded-lg border border-sky-100 overflow-hidden">
-                                  <table className="w-full text-xs">
-                                      <thead className="bg-sky-600 text-white"><tr><th className="p-2 text-left">Type</th><th className="p-2 text-right">Sold</th><th className="p-2 text-right">Balance</th></tr></thead>
-                                      <tbody>{report.eggSales.entries.map((e, i) => <tr key={i} className="border-b border-sky-50 text-gray-900"><td className="p-2 font-semibold">{e.eggType}</td><td className="p-2 text-right">{e.sold}</td><td className="p-2 text-right font-bold">{e.opening - e.sold}</td></tr>)}</tbody>
-                                  </table>
-                                </div>
+                        </div>
+                        {/* Egg Sales */}
+                        <div>
+                            <h3 className="text-sm font-black text-sky-700 uppercase tracking-widest mb-3 flex items-center"><SalesIcon className="w-5 h-5 mr-2" /> 04. Egg Sales & Inventory</h3>
+                            <div className="overflow-x-auto rounded-lg border border-sky-100">
+                                <table className="w-full text-sm">
+                                <thead className="bg-sky-600 text-white font-bold"><tr><th className="p-3 text-left">Type</th><th className="p-3 text-right">Opening</th><th className="p-3 text-right">Production</th><th className="p-3 text-right">Total</th><th className="p-3 text-right">Sold</th><th className="p-3 text-right">Balance</th></tr></thead>
+                                <tbody>{report.eggSales.entries.map((e, i) => {
+                                    const production = e.production || 0;
+                                    const total = e.opening + production;
+                                    const balance = total - e.sold;
+                                    return (
+                                        <tr key={i} className="border-b border-sky-50 text-gray-900">
+                                            <td className="p-3 font-semibold">{e.eggType}</td>
+                                            <td className="p-3 text-right">{e.opening}</td>
+                                            <td className="p-3 text-right">{production}</td>
+                                            <td className="p-3 text-right font-medium">{total}</td>
+                                            <td className="p-3 text-right text-sky-600 font-bold">{e.sold}</td>
+                                            <td className="p-3 text-right font-bold">{balance}</td>
+                                        </tr>
+                                    );
+                                })}</tbody>
+                                </table>
                             </div>
                         </div>
 

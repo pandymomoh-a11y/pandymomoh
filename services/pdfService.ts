@@ -188,16 +188,23 @@ export const exportDailyReportToPdf = (report: DailyReport, profile: UserProfile
 
   doc.setTextColor(...COLORS.SKY);
   doc.text('SECTION 4: EGG SALES & INVENTORY', 14, currentY);
-  const salesData = report.eggSales.entries.map(e => [
-    e.eggType, 
-    e.opening.toLocaleString(), 
-    e.sold.toLocaleString(), 
-    (e.opening - e.sold).toLocaleString()
-  ]);
+  const salesData = report.eggSales.entries.map(e => {
+    const production = e.production || 0;
+    const total = e.opening + production;
+    const balance = total - e.sold;
+    return [
+      e.eggType, 
+      e.opening.toLocaleString(),
+      production.toLocaleString(),
+      total.toLocaleString(),
+      e.sold.toLocaleString(), 
+      balance.toLocaleString()
+    ];
+  });
 
   (doc as any).autoTable({
     startY: currentY + 5,
-    head: [['EGG CATEGORY', 'OPENING INVENTORY', 'UNITS SOLD', 'CLOSING BALANCE']],
+    head: [['EGG CATEGORY', 'OPENING', 'PRODUCTION', 'TOTAL STOCK', 'UNITS SOLD', 'BALANCE']],
     body: salesData,
     headStyles: { fillColor: COLORS.SKY, fontSize: 10, halign: 'center' },
     bodyStyles: { fontSize: 10, halign: 'center' },
